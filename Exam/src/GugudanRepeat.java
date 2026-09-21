@@ -22,35 +22,29 @@ public class GugudanRepeat {
 
             System.out.println();
 
-            // 단을 columnCount개씩 묶어서 출력
-            for (int groupStart = startDan;
-                 groupStart <= endDan;
-                 groupStart += columnCount) {
+            // ① 단 묶음 반복
+            for (int groupStart = startDan;  groupStart <= endDan;  groupStart += columnCount) {
+                 groupEnd = Math.min(  groupStart + columnCount - 1, endDan );
 
-                groupEnd = Math.min(
-                        groupStart + columnCount - 1,
-                        endDan
-                );
-
-                // 각 묶음의 단 제목 출력
+                // 단 제목 출력
                 for (int dan = groupStart; dan <= groupEnd; dan++) {
-                    System.out.printf("%-14s", dan + "단");
+                    System.out.printf("%-12s", dan + "단");
                 }
                 System.out.println();
-
-                // 구구단 출력
+    
+                // ② 곱하는 수 반복
                 for (int number = 1; number <= 9; number++) {
+                    // ③ 현재 묶음의 각 단 반복
                     for (int dan = groupStart; dan <= groupEnd; dan++) {
-                        System.out.printf(
-                                "%d × %d = %-4d",
-                                dan, number, dan * number
-                        );
+                        System.out.printf( "%d × %d = %-3d ", dan, number, dan * number );
                     }
                     System.out.println();
                 }
-
+    
                 System.out.println();
             }
+
+   
 
             System.out.print("계속하시겠습니까? (y/n) ");
             answer = scanner.next();

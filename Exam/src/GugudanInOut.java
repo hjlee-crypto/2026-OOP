@@ -13,15 +13,10 @@ public class GugudanInOut {
         System.out.print("가로 출력 개수? ");
         int columnCount = scanner.nextInt();
 
+        int groupEnd;
         // ① 단 묶음 반복
-        for (int groupStart = startDan;
-             groupStart <= endDan;
-             groupStart += columnCount) {
-
-            int groupEnd = Math.min(
-                    groupStart + columnCount - 1,
-                    endDan
-            );
+        for (int groupStart = startDan;  groupStart <= endDan;  groupStart += columnCount) {
+             groupEnd = Math.min(  groupStart + columnCount - 1, endDan );
 
             // 단 제목 출력
             for (int dan = groupStart; dan <= groupEnd; dan++) {
@@ -31,13 +26,9 @@ public class GugudanInOut {
 
             // ② 곱하는 수 반복
             for (int number = 1; number <= 9; number++) {
-
                 // ③ 현재 묶음의 각 단 반복
                 for (int dan = groupStart; dan <= groupEnd; dan++) {
-                    System.out.printf(
-                            "%d × %d = %-3d ",
-                            dan, number, dan * number
-                    );
+                    System.out.printf( "%d × %d = %-3d ", dan, number, dan * number );
                 }
                 System.out.println();
             }
