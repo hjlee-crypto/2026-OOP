@@ -1,12 +1,10 @@
 package rental.ui;
 
 import rental.exception.RentalException;
-import rental.model.Bicycle;
-import rental.model.ElectricBicycle;
-import rental.model.Kickboard;
 import rental.model.Member;
 import rental.model.Rental;
 import rental.model.Vehicle;
+import rental.model.VehicleFactory;
 import rental.service.RentalService;
 
 import java.util.List;
@@ -113,24 +111,18 @@ public class ConsoleUI {
     }
 
     private void registerVehicle() {
-        System.out.println("기기 종류: 1.일반자전거  2.전기자전거  3.전동킥보드");
+        System.out.println("기기 종류: " + VehicleFactory.typeMenu());
         String type = readLine("종류> ");
-        if (!type.equals("1") && !type.equals("2") && !type.equals("3")) {
+        if (!VehicleFactory.isValidType(type)) {
             System.out.println("기기 종류를 다시 선택하세요.");
             return;
         }
         String id = readLine("새 기기번호> ");
-        Vehicle vehicle;
-        if (type.equals("1")) {
-            vehicle = new Bicycle(id);
-        } else {
-            int battery = readInt("배터리(0~100)> ");
-            if (type.equals("2")) {
-                vehicle = new ElectricBicycle(id, battery);
-            } else {
-                vehicle = new Kickboard(id, battery);
-            }
+        int battery = 0;
+        if (VehicleFactory.needsBattery(type)) {
+            battery = readInt("배터리(0~100)> ");
         }
+        Vehicle vehicle = VehicleFactory.create(type, id, battery);   // 어떤 클래스로 만들지는 팩토리가 정한다
         service.registerVehicle(vehicle);
         System.out.println("기기 등록 완료: " + vehicle);
     }
