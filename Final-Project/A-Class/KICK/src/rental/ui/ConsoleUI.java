@@ -1,6 +1,7 @@
 package rental.ui;
 
 import rental.exception.RentalException;
+import rental.model.Rental;
 import rental.model.Vehicle;
 import rental.service.RentalService;
 
@@ -35,7 +36,7 @@ public class ConsoleUI {
 
     private void printMenu() {
         System.out.println();
-        System.out.println("1.기기 목록  2.대여  3.반납  0.종료");
+        System.out.println("1.기기 목록  2.대여  3.반납  4.이용 내역  0.종료");
     }
 
     private void handle(String menu) {
@@ -43,6 +44,7 @@ public class ConsoleUI {
             case "1": showVehicles(); break;
             case "2": rent(); break;
             case "3": giveBack(); break;
+            case "4": showHistory(); break;
             default: System.out.println("메뉴 번호를 다시 입력하세요.");
         }
     }
@@ -66,8 +68,17 @@ public class ConsoleUI {
     private void giveBack() {
         String memberId = readLine("회원번호> ");
         int minutes = Integer.parseInt(readLine("이용 시간(분)> "));
-        int fee = service.giveBack(memberId, minutes);
-        System.out.println("반납 완료: " + minutes + "분 | " + fee + "원");
+        Rental rental = service.giveBack(memberId, minutes);
+        System.out.println("반납 완료: " + rental);
+    }
+
+    private void showHistory() {
+        List<Rental> history = service.getHistory();
+        System.out.println("--- 이용 내역 (" + history.size() + "건) ---");
+        for (Rental rental : history) {
+            System.out.println(rental);
+        }
+        System.out.println("매출 합계: " + service.getTotalSales() + "원");
     }
 
     // ---------- 입력 도우미 ----------

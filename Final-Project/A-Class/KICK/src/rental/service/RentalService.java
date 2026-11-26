@@ -3,9 +3,11 @@ package rental.service;
 import rental.exception.NotFoundException;
 import rental.exception.RentalException;
 import rental.model.Member;
+import rental.model.Rental;
 import rental.model.Vehicle;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,6 +18,7 @@ import java.util.Map;
 public class RentalService {
     private final Map<String, Member> members = new LinkedHashMap<>();
     private final Map<String, Vehicle> vehicles = new LinkedHashMap<>();
+    private final List<Rental> history = new ArrayList<>();
 
     // ---------- 등록 ----------
     public void registerMember(Member member) {
@@ -60,6 +63,18 @@ public class RentalService {
         return list;
     }
 
+    public List<Rental> getHistory() {
+        return Collections.unmodifiableList(history);
+    }
+
+    public int getTotalSales() {
+        int total = 0;
+        for (Rental rental : history) {
+            total += rental.getFee();
+        }
+        return total;
+    }
+
     // ---------- 대여·반납 ----------
     public void rent(String memberId, String vehicleId) {
         Member member = findMember(memberId);
@@ -71,8 +86,7 @@ public class RentalService {
         member.startRental(vehicle);
     }
 
-    // 반납하고 요금을 돌려준다
-    public int giveBack(String memberId, int minutes) {
+    public Rental giveBack(String memberId, int minutes) {
         if (minutes <= 0) {
             throw new RentalException("이용 시간은 1분 이상이어야 합니다.");
         }
@@ -83,6 +97,9 @@ public class RentalService {
         Vehicle vehicle = member.getCurrent();
         vehicle.giveBack(minutes);                  // 전기 기기는 배터리가 줄어든다
         member.endRental();
-        return vehicle.calculateFee(minutes);       // 다형성: 실제 기기의 요금표로 계산
+        int fee = vehicle.calculateFee(minutes);    // 다형성: 실제 기기의 요금표로 계산
+        Rental rental = new Rental(member, vehicle, minutes, fee);
+        history.add(rental);
+        return rental;
     }
 }
