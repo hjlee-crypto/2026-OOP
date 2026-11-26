@@ -37,7 +37,7 @@ public class RentalService {
         if (v.isRented()) return "이미 대여 중인 기기입니다.";
         if (v instanceof Kickboard && ((Kickboard) v).getBattery() < 20) return "배터리가 부족합니다.";
         v.rent();
-        m.setCurrent(v);
+        m.startRental(v);
         return m.getName() + "님 " + v.typeName() + " " + v.getId() + " 대여 완료";
     }
 
@@ -47,7 +47,7 @@ public class RentalService {
         Vehicle v = m.getCurrent();
         if (v == null) return "대여 중인 기기가 없습니다.";
         v.giveBack(minutes);
-        m.setCurrent(null);
+        m.endRental();
         int fee = v.calculateFee(minutes);   // 다형성: 실제 객체의 요금 계산이 실행됨
         return v.typeName() + " " + v.getId() + " 반납, " + minutes + "분 이용, 요금 " + fee + "원";
     }
