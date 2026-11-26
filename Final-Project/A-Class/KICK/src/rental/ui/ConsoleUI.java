@@ -1,6 +1,10 @@
 package rental.ui;
 
 import rental.exception.RentalException;
+import rental.model.Bicycle;
+import rental.model.ElectricBicycle;
+import rental.model.Kickboard;
+import rental.model.Member;
 import rental.model.Rental;
 import rental.model.Vehicle;
 import rental.service.RentalService;
@@ -38,16 +42,20 @@ public class ConsoleUI {
 
     private void printMenu() {
         System.out.println();
-        System.out.println("1.기기 목록  2.대여  3.반납  4.이용 내역  5.전체 충전  0.종료");
+        System.out.println("1.기기 목록  2.회원 목록  3.대여  4.반납  5.이용 내역");
+        System.out.println("6.전체 충전  7.회원 등록  8.기기 등록  0.종료");
     }
 
     private void handle(String menu) {
         switch (menu) {
             case "1": showVehicles(); break;
-            case "2": rent(); break;
-            case "3": giveBack(); break;
-            case "4": showHistory(); break;
-            case "5": chargeAll(); break;
+            case "2": showMembers(); break;
+            case "3": rent(); break;
+            case "4": giveBack(); break;
+            case "5": showHistory(); break;
+            case "6": chargeAll(); break;
+            case "7": registerMember(); break;
+            case "8": registerVehicle(); break;
             default: System.out.println("메뉴 번호를 다시 입력하세요.");
         }
     }
@@ -57,6 +65,14 @@ public class ConsoleUI {
         System.out.println("--- 기기 목록 (" + vehicles.size() + "대) ---");
         for (Vehicle vehicle : vehicles) {
             System.out.println(vehicle);    // 기기마다 오버라이딩한 toString()이 호출된다
+        }
+    }
+
+    private void showMembers() {
+        List<Member> members = service.getMembers();
+        System.out.println("--- 회원 목록 (" + members.size() + "명) ---");
+        for (Member member : members) {
+            System.out.println(member);
         }
     }
 
@@ -87,6 +103,36 @@ public class ConsoleUI {
     private void chargeAll() {
         int count = service.chargeAll();
         System.out.println(count + "대를 충전했습니다.");
+    }
+
+    private void registerMember() {
+        String id = readLine("새 회원번호> ");
+        String name = readLine("이름> ");
+        service.registerMember(new Member(id, name));
+        System.out.println("회원 등록 완료: " + id + " " + name);
+    }
+
+    private void registerVehicle() {
+        System.out.println("기기 종류: 1.일반자전거  2.전기자전거  3.전동킥보드");
+        String type = readLine("종류> ");
+        if (!type.equals("1") && !type.equals("2") && !type.equals("3")) {
+            System.out.println("기기 종류를 다시 선택하세요.");
+            return;
+        }
+        String id = readLine("새 기기번호> ");
+        Vehicle vehicle;
+        if (type.equals("1")) {
+            vehicle = new Bicycle(id);
+        } else {
+            int battery = readInt("배터리(0~100)> ");
+            if (type.equals("2")) {
+                vehicle = new ElectricBicycle(id, battery);
+            } else {
+                vehicle = new Kickboard(id, battery);
+            }
+        }
+        service.registerVehicle(vehicle);
+        System.out.println("기기 등록 완료: " + vehicle);
     }
 
     // ---------- 입력 도우미 ----------
