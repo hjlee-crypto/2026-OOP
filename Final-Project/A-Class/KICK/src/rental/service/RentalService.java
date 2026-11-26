@@ -2,6 +2,7 @@ package rental.service;
 
 import rental.exception.NotFoundException;
 import rental.exception.RentalException;
+import rental.model.Chargeable;
 import rental.model.Member;
 import rental.model.Rental;
 import rental.model.Vehicle;
@@ -13,7 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// 회원·기기를 보관하고 대여·반납 흐름을 처리한다.
+// 회원·기기를 보관하고 대여·반납·충전 흐름을 처리한다.
 // 입력과 출력은 하지 않는다 (ConsoleUI가 담당).
 public class RentalService {
     private final Map<String, Member> members = new LinkedHashMap<>();
@@ -101,5 +102,21 @@ public class RentalService {
         Rental rental = new Rental(member, vehicle, minutes, fee);
         history.add(rental);
         return rental;
+    }
+
+    // ---------- 충전 ----------
+    // 대여 중이 아닌 충전 가능 기기를 모두 충전하고, 충전한 대수를 돌려준다
+    public int chargeAll() {
+        int count = 0;
+        for (Vehicle vehicle : vehicles.values()) {
+            if (vehicle instanceof Chargeable && !vehicle.isRented()) {
+                Chargeable chargeable = (Chargeable) vehicle;
+                if (chargeable.getBattery() < Chargeable.FULL_BATTERY) {
+                    chargeable.charge();
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 }
