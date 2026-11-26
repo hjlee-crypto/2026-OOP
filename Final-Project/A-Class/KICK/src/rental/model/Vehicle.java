@@ -11,6 +11,9 @@ public abstract class Vehicle {
     private boolean rented;     // 대여 중이면 true. rent()/giveBack()으로만 바뀐다
 
     protected Vehicle(String id) {
+        if (id == null || id.trim().isEmpty()) {
+            throw new IllegalArgumentException("기기번호를 입력하세요.");
+        }
         this.id = id;
     }
 
