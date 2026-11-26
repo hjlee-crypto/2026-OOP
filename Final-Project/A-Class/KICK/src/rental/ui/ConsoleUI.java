@@ -30,6 +30,8 @@ public class ConsoleUI {
                 handle(menu);
             } catch (RentalException e) {           // 업무 오류: 메시지만 보여주고 계속 진행
                 System.out.println("[오류] " + e.getMessage());
+            } catch (IllegalArgumentException e) {  // 잘못된 값 (예: 배터리 150)
+                System.out.println("[오류] " + e.getMessage());
             }
         }
     }
@@ -68,7 +70,7 @@ public class ConsoleUI {
 
     private void giveBack() {
         String memberId = readLine("회원번호> ");
-        int minutes = Integer.parseInt(readLine("이용 시간(분)> "));
+        int minutes = readInt("이용 시간(분)> ");
         Rental rental = service.giveBack(memberId, minutes);
         System.out.println("반납 완료: " + rental);
     }
@@ -91,5 +93,17 @@ public class ConsoleUI {
     private String readLine(String prompt) {
         System.out.print(prompt);
         return scanner.nextLine().trim();
+    }
+
+    // 숫자가 입력될 때까지 다시 묻는다
+    private int readInt(String prompt) {
+        while (true) {
+            String text = readLine(prompt);
+            try {
+                return Integer.parseInt(text);
+            } catch (NumberFormatException e) {
+                System.out.println("숫자로 입력하세요.");
+            }
+        }
     }
 }
