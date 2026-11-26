@@ -1,6 +1,7 @@
 package rental;
 
 import rental.model.Bicycle;
+import rental.model.ElectricBicycle;
 import rental.model.Kickboard;
 import rental.model.Member;
 import rental.service.RentalService;
@@ -12,8 +13,9 @@ public class Main {
         service.addMember(new Member("M1", "정재부"));
         service.addMember(new Member("M2", "오찬영"));
         service.addVehicle(new Bicycle("B-01"));
+        service.addVehicle(new ElectricBicycle("E-01", 80));
         service.addVehicle(new Kickboard("K-01", 60));
-        service.addVehicle(new Kickboard("K-02", 15));
+        service.addVehicle(new Kickboard("K-02", 15));   // 배터리 부족 시연용
         new ConsoleUI(service).run();
     }
 }
