@@ -1,11 +1,13 @@
 package rental.ui;
 
+import rental.exception.RentalException;
 import rental.model.Vehicle;
 import rental.service.RentalService;
 
+import java.util.List;
 import java.util.Scanner;
 
-// 입력과 출력만 담당
+// 콘솔 입력과 출력만 담당한다. 업무 규칙은 RentalService와 model이 처리한다.
 public class ConsoleUI {
     private final RentalService service;
     private final Scanner scanner = new Scanner(System.in);
@@ -15,35 +17,62 @@ public class ConsoleUI {
     }
 
     public void run() {
+        System.out.println("=== 공유 킥보드·자전거 대여 시스템 ===");
         while (true) {
-            System.out.println();
-            System.out.println("1. 기기 목록  2. 대여  3. 반납  0. 종료");
-            System.out.print("선택> ");
-            String menu = scanner.nextLine().trim();
-            switch (menu) {
-                case "1" -> {
-                    for (Vehicle v : service.getVehicles()) System.out.println(v);
-                }
-                case "2" -> {
-                    System.out.print("회원번호> ");
-                    String memberId = scanner.nextLine().trim();
-                    System.out.print("기기번호> ");
-                    String vehicleId = scanner.nextLine().trim();
-                    System.out.println(service.rent(memberId, vehicleId));
-                }
-                case "3" -> {
-                    System.out.print("회원번호> ");
-                    String memberId = scanner.nextLine().trim();
-                    System.out.print("이용 시간(분)> ");
-                    int minutes = Integer.parseInt(scanner.nextLine().trim());  // 숫자가 아니면 오류: 13주차 예외 처리 예정
-                    System.out.println(service.giveBack(memberId, minutes));
-                }
-                case "0" -> {
-                    System.out.println("종료합니다.");
-                    return;
-                }
-                default -> System.out.println("메뉴를 다시 선택하세요.");
+            printMenu();
+            String menu = readLine("선택> ");
+            if (menu.equals("0")) {
+                System.out.println("프로그램을 종료합니다.");
+                return;
+            }
+            try {
+                handle(menu);
+            } catch (RentalException e) {           // 업무 오류: 메시지만 보여주고 계속 진행
+                System.out.println("[오류] " + e.getMessage());
             }
         }
+    }
+
+    private void printMenu() {
+        System.out.println();
+        System.out.println("1.기기 목록  2.대여  3.반납  0.종료");
+    }
+
+    private void handle(String menu) {
+        switch (menu) {
+            case "1": showVehicles(); break;
+            case "2": rent(); break;
+            case "3": giveBack(); break;
+            default: System.out.println("메뉴 번호를 다시 입력하세요.");
+        }
+    }
+
+    private void showVehicles() {
+        List<Vehicle> vehicles = service.getVehicles();
+        System.out.println("--- 기기 목록 (" + vehicles.size() + "대) ---");
+        for (Vehicle vehicle : vehicles) {
+            System.out.println(vehicle);    // 기기마다 오버라이딩한 toString()이 호출된다
+        }
+    }
+
+    private void rent() {
+        String memberId = readLine("회원번호> ");
+        String vehicleId = readLine("기기번호> ");
+        service.rent(memberId, vehicleId);
+        Vehicle vehicle = service.findVehicle(vehicleId);
+        System.out.println("대여 완료: " + vehicle.typeName() + " " + vehicle.getId());
+    }
+
+    private void giveBack() {
+        String memberId = readLine("회원번호> ");
+        int minutes = Integer.parseInt(readLine("이용 시간(분)> "));
+        int fee = service.giveBack(memberId, minutes);
+        System.out.println("반납 완료: " + minutes + "분 | " + fee + "원");
+    }
+
+    // ---------- 입력 도우미 ----------
+    private String readLine(String prompt) {
+        System.out.print(prompt);
+        return scanner.nextLine().trim();
     }
 }

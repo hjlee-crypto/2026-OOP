@@ -1,54 +1,88 @@
 package rental.service;
 
-import rental.model.Kickboard;
+import rental.exception.NotFoundException;
+import rental.exception.RentalException;
 import rental.model.Member;
 import rental.model.Vehicle;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-// 대여·반납 흐름 담당
-// 1차 버전: ArrayList에서 for문으로 검색, 실패하면 메시지 문자열을 돌려줌
-// (12주차에 Map 검색 + 사용자 정의 예외로 개선 예정)
+// 회원·기기를 보관하고 대여·반납 흐름을 처리한다.
+// 입력과 출력은 하지 않는다 (ConsoleUI가 담당).
 public class RentalService {
-    private final List<Member> members = new ArrayList<>();
-    private final List<Vehicle> vehicles = new ArrayList<>();
+    private final Map<String, Member> members = new LinkedHashMap<>();
+    private final Map<String, Vehicle> vehicles = new LinkedHashMap<>();
 
-    public void addMember(Member m) { members.add(m); }
-    public void addVehicle(Vehicle v) { vehicles.add(v); }
-    public List<Vehicle> getVehicles() { return vehicles; }
-
-    private Member findMember(String id) {
-        for (Member m : members) if (m.getId().equals(id)) return m;
-        return null;
+    // ---------- 등록 ----------
+    public void registerMember(Member member) {
+        if (members.containsKey(member.getId())) {
+            throw new RentalException("이미 등록된 회원번호입니다: " + member.getId());
+        }
+        members.put(member.getId(), member);
     }
 
-    private Vehicle findVehicle(String id) {
-        for (Vehicle v : vehicles) if (v.getId().equals(id)) return v;
-        return null;
+    public void registerVehicle(Vehicle vehicle) {
+        if (vehicles.containsKey(vehicle.getId())) {
+            throw new RentalException("이미 등록된 기기번호입니다: " + vehicle.getId());
+        }
+        vehicles.put(vehicle.getId(), vehicle);
     }
 
-    public String rent(String memberId, String vehicleId) {
-        Member m = findMember(memberId);
-        if (m == null) return "없는 회원입니다.";
-        if (m.getCurrent() != null) return "이미 대여 중인 기기가 있습니다.";
-        Vehicle v = findVehicle(vehicleId);
-        if (v == null) return "없는 기기입니다.";
-        if (v.isRented()) return "이미 대여 중인 기기입니다.";
-        if (v instanceof Kickboard && ((Kickboard) v).getBattery() < 20) return "배터리가 부족합니다.";
-        v.rent();
-        m.startRental(v);
-        return m.getName() + "님 " + v.typeName() + " " + v.getId() + " 대여 완료";
+    // ---------- 조회 ----------
+    public Member findMember(String memberId) {
+        Member member = members.get(memberId);
+        if (member == null) {
+            throw new NotFoundException("회원", memberId);
+        }
+        return member;
     }
 
-    public String giveBack(String memberId, int minutes) {
-        Member m = findMember(memberId);
-        if (m == null) return "없는 회원입니다.";
-        Vehicle v = m.getCurrent();
-        if (v == null) return "대여 중인 기기가 없습니다.";
-        v.giveBack(minutes);
-        m.endRental();
-        int fee = v.calculateFee(minutes);   // 다형성: 실제 객체의 요금 계산이 실행됨
-        return v.typeName() + " " + v.getId() + " 반납, " + minutes + "분 이용, 요금 " + fee + "원";
+    public Vehicle findVehicle(String vehicleId) {
+        Vehicle vehicle = vehicles.get(vehicleId);
+        if (vehicle == null) {
+            throw new NotFoundException("기기", vehicleId);
+        }
+        return vehicle;
+    }
+
+    public List<Member> getMembers() {
+        return new ArrayList<>(members.values());
+    }
+
+    // 기기 번호 순으로 정렬한 목록
+    public List<Vehicle> getVehicles() {
+        List<Vehicle> list = new ArrayList<>(vehicles.values());
+        list.sort(Comparator.comparing(Vehicle::getId));
+        return list;
+    }
+
+    // ---------- 대여·반납 ----------
+    public void rent(String memberId, String vehicleId) {
+        Member member = findMember(memberId);
+        if (member.isRenting()) {
+            throw new RentalException(member.getName() + "님은 이미 " + member.getCurrent().getId() + " 기기를 대여 중입니다.");
+        }
+        Vehicle vehicle = findVehicle(vehicleId);
+        vehicle.rent();                 // 다형성: 전기 기기는 배터리 검사까지 실행된다
+        member.startRental(vehicle);
+    }
+
+    // 반납하고 요금을 돌려준다
+    public int giveBack(String memberId, int minutes) {
+        if (minutes <= 0) {
+            throw new RentalException("이용 시간은 1분 이상이어야 합니다.");
+        }
+        Member member = findMember(memberId);
+        if (!member.isRenting()) {
+            throw new RentalException(member.getName() + "님은 대여 중인 기기가 없습니다.");
+        }
+        Vehicle vehicle = member.getCurrent();
+        vehicle.giveBack(minutes);                  // 전기 기기는 배터리가 줄어든다
+        member.endRental();
+        return vehicle.calculateFee(minutes);       // 다형성: 실제 기기의 요금표로 계산
     }
 }
