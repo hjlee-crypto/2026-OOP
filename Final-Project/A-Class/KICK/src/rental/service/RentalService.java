@@ -46,7 +46,7 @@ public class RentalService {
         if (m == null) return "없는 회원입니다.";
         Vehicle v = m.getCurrent();
         if (v == null) return "대여 중인 기기가 없습니다.";
-        v.giveBack();
+        v.giveBack(minutes);
         m.setCurrent(null);
         int fee = v.calculateFee(minutes);   // 다형성: 실제 객체의 요금 계산이 실행됨
         return v.typeName() + " " + v.getId() + " 반납, " + minutes + "분 이용, 요금 " + fee + "원";
